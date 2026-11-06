@@ -58,5 +58,7 @@ class RobotEnv {
     RobotEnv(const std::string& path)
         : RobotEnv(load(path)) {}
 
-    StepOutput step() { return interpreter.step(); }
+    Interpreter::StepOutput step() {
+        return interpreter.step();
+    }
 };
