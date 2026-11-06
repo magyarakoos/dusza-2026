@@ -10,5 +10,5 @@ for src in src/*.cpp; do
     fi
 done
 
-g++ build/*.o -o build/app -pthread
+g++ build/*.o -o build/app -pthread -DUNICODE -DNOMINMAX
 ./build/app
