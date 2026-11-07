@@ -1,44 +1,65 @@
+#pragma once
+
+#include "robot_env.hpp"
+
 #include "ftxui.hpp"
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
 
 using namespace ftxui;
 
-inline Component SourceWindow() {
-  bool enabled = true;
+inline Component SourceWindow(const RobotEnv &env) {
+  struct State {
+    bool enabled = true;
+    int offset = 0;
+  };
 
-  // Toggle in the top-left corner.
-  auto toggle = Checkbox("source", &enabled);
+  std::vector<std::string> lines = env.program_lines;
+  auto state = std::make_shared<State>();
 
-  // Example source content.
-  std::vector<std::string> lines;
-  for (int i = 1; i <= 100; ++i) {
-    lines.push_back("Source line " + std::to_string(i));
-  }
+  auto toggle = Checkbox("source", &state->enabled);
 
-  auto content = Renderer([&] {
-    Elements elements;
-    if (enabled) {
-      for (const auto &line : lines) {
-        elements.push_back(text(line));
+  auto component = Renderer(toggle, [state, toggle, &lines] {
+    constexpr int height = 15;
+    const int line_count = static_cast<int>(lines.size());
+
+    state->offset =
+        std::clamp(state->offset, 0, std::max(0, line_count - height));
+
+    Elements content;
+
+    if (state->enabled) {
+      for (int i = state->offset;
+           i < std::min(state->offset + height, line_count); ++i) {
+        content.push_back(text(lines[i]));
       }
     } else {
-      elements.push_back(text("Source disabled") | dim);
+      content.push_back(text("Source disabled") | dim);
     }
 
-    return vbox(std::move(elements)) | vscroll_indicator | frame |
-           size(HEIGHT, LESS_THAN, 20);
+    return window(text("source"),
+                  vbox({toggle->Render(), separator(),
+                        vbox(std::move(content)) | vscroll_indicator | frame |
+                            size(HEIGHT, EQUAL, height)}));
   });
 
-  // Checkbox + scrollable content inside the window.
-  auto component = Container::Vertical({
-      toggle,
-      content,
-  });
+  return component | CatchEvent([state](Event event) {
+           if (!state->enabled)
+             return false;
 
-  return Renderer(component, [&] {
-    return window(text("source"), vbox({
-                                      toggle->Render(),
-                                      separator(),
-                                      content->Render(),
-                                  }));
-  });
+           if (event == Event::ArrowDown || event == Event::Character('j')) {
+             state->offset++;
+             return true;
+           }
+
+           if (event == Event::ArrowUp || event == Event::Character('k')) {
+             state->offset--;
+             return true;
+           }
+
+           return false;
+         });
 }
