@@ -1,8 +1,6 @@
-// #include "ui.hpp"
+#include "robot_env.hpp"
 #include <fstream>
 #include <iostream>
-#define FTXUI_IMPLEMENTATION
-#include "robot_env.hpp"
 
 int main(int argc, char *argv[]) {
   bool quiet = false;
@@ -37,8 +35,9 @@ int main(int argc, char *argv[]) {
       std::cout << stepOut.log.value() << '\n';
       stepOut = env.step();
       running = stepOut.log.has_value();
+
+      out.close();
     }
-    out.close();
   } else {
     if (argc < 3) {
       std::cerr << "Usage: " << argv[0] << " input.txt output.txt\n";
