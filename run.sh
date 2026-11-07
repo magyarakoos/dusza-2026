@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cmake -S . -B build
-cmake --build build
-./build/my_app
+cmake -S . -B build || exit 1
+cmake --build build || exit 1
+./build/my_app "$@"
